@@ -488,12 +488,11 @@
    ============================================================ */
 /* 訂單後端：Supabase Edge Functions（舊的 Google Apps Script 原始碼保留在 gas/Code.gs 供參考，網站已不再呼叫） */
 const ORDER_API = {
-  create: 'https://wbccrjibekqsygappslb.supabase.co/functions/v1/super-worker', // create-order
-  track:  'https://wbccrjibekqsygappslb.supabase.co/functions/v1/get-order'
+  create: 'https://tstfzbhdwtzjrdqmenvr.supabase.co/functions/v1/create-order',
+  track:  'https://tstfzbhdwtzjrdqmenvr.supabase.co/functions/v1/get-order'
 };
-/* Supabase Dashboard → Project Settings → API 的 anon（public）key。這是公開金鑰，可以放在前端；
-   ⚠️ 絕對不可貼 service_role / secret key。 */
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndiY2NyamliZWtxc3lnYXBwc2xiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI2Mzg1MDYsImV4cCI6MjEwODIxNDUwNn0.uP36F1MvDC-fSAO4OpR6aFD9SZWuD02nCLwOacFO1I8';
+/* anon（public）key 是公開金鑰，可以放在前端；⚠️ 絕對不可貼 service_role / secret key。 */
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRzdGZ6Ymhkd3R6anJkcW1lbnZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTUzMzUwODksImV4cCI6MjExMDkxMTA4OX0.LAmHUBCE7rdcBogPEO20gVw0iM_K5Bp3gnxjMhYosd0'; // 請貼上 Supabase 的 anon public key
 
 const IMG = id => `https://images.unsplash.com/${id}?auto=format&fit=crop&w=800&q=75`;
 
@@ -751,7 +750,7 @@ form.addEventListener('submit', e => {
 
 /* 呼叫 Supabase Edge Function。HTTP 錯誤或回應 ok 不是 true 都拋出錯誤(e.status:HTTP 狀態碼;e.network:連線失敗) */
 async function callOrderApi(url, body) {
-  if (!SUPABASE_ANON_KEY) throw new Error('網站尚未設定訂單服務，請聯絡店家');
+  if (!SUPABASE_ANON_KEY) throw new Error('網站尚未設定訂單服務');
   let r;
   try {
     r = await fetch(url, {
@@ -766,7 +765,7 @@ async function callOrderApi(url, body) {
   try { res = await r.json(); } catch (_) {}
   if (r.ok && res && res.ok === true) return res;
   let msg = res && typeof res.error === 'string' && res.error ? res.error : '';
-  if (r.status === 401 || r.status === 403) msg = '訂單服務授權失敗，請聯絡店家';
+  if (!msg && (r.status === 401 || r.status === 403)) msg = '訂單服務授權失敗，請聯絡店家';
   const e = new Error(msg || (r.ok ? '伺服器回應格式不正確' : `伺服器錯誤（HTTP ${r.status}），請稍後再試`));
   e.status = r.status; throw e;
 }
